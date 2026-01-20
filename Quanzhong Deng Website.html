@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en" className="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quanzhong Deng | Composer & Sound Artist</title>
+
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@200;300;400;600&family=Noto+Serif+SC:wght@300;400;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'void': '#0a0a0a',
+                        'paper': '#e5e5e5',
+                        'gold-muted': '#c5b358',
+                        'concrete': '#808080',
+                    },
+                    fontFamily: {
+                        serif: ['"Cormorant Garamond"', 'serif'],
+                        sans: ['"Inter"', 'sans-serif'],
+                        cserif: ['"Noto Serif SC"', 'serif'],
+                        kaiti: ['"KaiTi"', '"STKaiti"', '"楷体"', 'serif'],// Chinese Serif
+                    },
+                    letterSpacing: {
+                        'widest-xl': '0.25em',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0a0a0a;
+            color: #e5e5e5;
+            overflow-x: hidden;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        .fade-in-up {
+            animation: fadeInUp 0.8s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Bilingual Text Utility */
+        .dual-text h2 {
+            font-family: 'Cormorant Garamond', serif;
+        }
+        .dual-text p {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .cn-text {
+            font-family: 'Noto Serif SC', serif;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- INLINE ICONS ---
+        const IconPlay = ({ size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+        );
+
+        const IconArrowRight = ({ size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+        );
+
+        const IconMail = ({ size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+            </svg>
+        );
+
+        const IconDownload = ({ size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+        );
+
+        // Component: Bilingual Text Block (Original Elegant Size)
+        const DualText = ({ en, cn, className = "", align = "left", large = false }) => (
+            <div className={`flex flex-col ${align === 'center' ? 'items-center text-center' : align === 'right' ? 'items-end text-right' : 'items-start text-left'} ${className}`}>
+                <span className={`block font-serif tracking-wide ${large ? 'text-4xl md:text-6xl lg:text-7xl font-light italic text-white' : 'text-xl md:text-2xl text-white'}`}>
+                    {en}
+                </span>
+                <span className={`block mt-1 font-cserif font-light text-concrete ${large ? 'text-lg md:text-xl tracking-[0.2em] mt-3' : 'text-sm tracking-widest'}`}>
+                    {cn}
+                </span>
+            </div>
+        );
+
+        // Component: Section Separator
+        const Divider = () => (
+            <div className="w-full py-16 flex items-center justify-center opacity-30">
+                <div className="h-[1px] w-24 bg-white"></div>
+            </div>
+        );
+
+        // Component: Work List Item
+        const WorkItem = ({ year, titleEn, titleCn, instrumentationEn, instrumentationCn, duration, link }) => (
+            <a href={link ? link : "#"} target="_blank" className="block group border-t border-white/10 py-6 md:py-8 hover:bg-white/5 transition-all duration-500 cursor-pointer">
+                <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 items-baseline">
+                    <div className="md:col-span-1 text-concrete font-mono text-sm">{year}</div>
+                    <div className="md:col-span-5">
+                        <h3 className="text-xl md:text-2xl font-serif italic text-white group-hover:text-gold-muted transition-colors flex items-center gap-2">
+                            {titleEn}
+                            {link && <IconArrowRight size={16} className="-rotate-45 opacity-0 group-hover:opacity-100 transition-opacity text-gold-muted" />}
+                        </h3>
+                        <p className="text-sm text-concrete font-cserif mt-1">{titleCn}</p>
+                    </div>
+                    <div className="md:col-span-4">
+                        <p className="text-sm text-gray-400 font-sans tracking-wide uppercase">{instrumentationEn}</p>
+                        <p className="text-xs text-concrete font-cserif mt-0.5">{instrumentationCn}</p>
+                    </div>
+                    <div className="md:col-span-2 text-right md:text-right font-mono text-xs text-concrete flex items-center justify-end gap-2">
+                        {duration} <IconPlay size={12} className={`opacity-0 group-hover:opacity-100 transition-opacity ${link ? 'text-gold-muted' : ''}`} />
+                    </div>
+                </div>
+            </a>
+        );
+
+        const App = () => {
+            const [scrolled, setScrolled] = useState(false);
+
+            useEffect(() => {
+                const handleScroll = () => {
+                    setScrolled(window.scrollY > 50);
+                };
+                window.addEventListener('scroll', handleScroll);
+                return () => window.removeEventListener('scroll', handleScroll);
+            }, []);
+
+            return (
+                <div className="bg-void selection:bg-gold-muted selection:text-black">
+
+                    {/* Navigation (Click name to scroll top) */}
+                    <nav className={`fixed w-full z-50 transition-all duration-500 ${scrolled ? 'bg-void/90 backdrop-blur-md py-4 border-b border-white/5' : 'bg-transparent py-8'}`}>
+                        <div className="container mx-auto px-6 flex justify-between items-center">
+                            <a href="#" className="font-serif text-2xl tracking-widest text-white hover:text-gold-muted transition-colors cursor-pointer block">
+                                Quanzhong <span className="text-gold-muted">Deng</span>
+                            </a>
+                            <div className="hidden md:flex gap-12 text-xs tracking-[0.2em] font-sans text-gray-400 uppercase">
+                                <a href="#biography" className="hover:text-white transition-colors">Bio / 个人简介</a>
+                                <a href="#works" className="hover:text-white transition-colors">Works / 作品</a>
+                                <a href="#schedule" className="hover:text-white transition-colors">Schedule / 日程</a>
+                                <a href="#contact" className="hover:text-white transition-colors">Contact / 联络</a>
+                            </div>
+                            <div className="md:hidden text-white">
+                                <div className="space-y-1.5 cursor-pointer">
+                                    <div className="w-6 h-px bg-white"></div>
+                                    <div className="w-6 h-px bg-white"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </nav>
+
+                    {/* Hero Section (Reverted to Original Elegant Design) */}
+                    <header id="hero" className="relative min-h-screen flex items-center justify-center pt-20">
+                        {/* Background Element */}
+                        <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 opacity-20 pointer-events-none">
+                            <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-blue-900 rounded-full blur-[120px] mix-blend-screen animate-pulse"></div>
+                            <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-purple-900 rounded-full blur-[100px] mix-blend-screen opacity-50"></div>
+                        </div>
+
+                        <div className="container mx-auto px-6 z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+
+                            {/* Left Side: Text */}
+                            <div className="lg:col-span-6 fade-in-up" style={{animationDelay: '0.1s'}}>
+                                <DualText
+                                    en="Sculpting Time & Silence"
+                                    cn="雕刻时间与静默"
+                                    large={true}
+                                />
+                                <div className="mt-12 max-w-xl">
+                                    {/* *** FONT CHANGED HERE *** 改为 font-serif (衬线体) + italic (斜体) + text-lg (稍大)
+                                        看起来更有艺术感
+                                    */}
+                                    <p className="text-gray-200 font-serif italic text-lg md:text-xl leading-relaxed mb-3 tracking-wide">
+                                        Exploration of acoustic phenomena and algorithmic structures.
+                                        Bridging the gap between traditional orchestration and electronic soundscapes.
+                                    </p>
+                                    <p className="text-concrete font-cserif text-sm leading-relaxed">
+                                        探索声学现象与算法结构的边界。在传统配器法与电子音景之间架起桥梁，构建极简而深邃的听觉空间。
+                                    </p>
+                                </div>
+
+                                <div className="mt-12 flex items-center gap-6">
+                                    <a href="#works" className="px-8 py-3 border border-white/20 text-white font-sans text-xs tracking-[0.2em] hover:bg-white hover:text-black transition-all uppercase">
+                                        Listen Now
+                                    </a>
+                                </div>
+                            </div>
+
+                            {/* Right Side: Photo (Original Framed Style) */}
+                            <div className="lg:col-span-6 flex flex-col justify-center items-end text-right fade-in-up" style={{animationDelay: '0.3s'}}>
+                                <div className="mb-8 relative w-full bg-white/5 border border-white/20 p-2 group transition-transform duration-500 ease-out hover:scale-[1.01] hover:shadow-[0_20px_50px_rgba(255,255,255,0.05)] hover:border-gold-muted/40">
+                                    <div className="w-full overflow-hidden">
+                                        <img
+                                            src="./Quanzhong Deng.jpg"
+                                            alt="Portrait"
+                                            className="w-full h-auto block transition-transform duration-1000 ease-out group-hover:scale-105"
+                                        />
+                                    </div>
+                                    <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t border-l border-gold-muted opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                                    <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b border-r border-gold-muted opacity-50 group-hover:opacity-100 transition-opacity"></div>
+                                </div>
+
+                                <div className="space-y-1">
+                                    <h1 className="text-4xl font-serif italic text-white">Quanzhong <span className="text-gold-muted">Deng</span></h1>
+                                    <p className="text-2xl font-kaiti text-gray-400">邓荃中</p>
+                                    <div className="h-px w-16 bg-gold-muted ml-auto my-10"></div>
+                                    <p className="text-xl uppercase tracking-widest text-concrete">Composer / Multimedia Artist</p>
+                                    <p className="text-xl text-concrete font-cserif">作曲家 / 多媒体艺术家</p>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* Biography Section (FULL SCREEN & SPLIT LAYOUT) */}
+                    <section id="biography" className="min-h-screen flex items-center bg-void relative py-20 scroll-mt-0">
+                        <div className="container mx-auto px-6 h-full">
+                            <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center h-full">
+
+                                {/* 1. Image Column (Left) */}
+                                <div className="lg:col-span-5 h-[60vh] lg:h-[75vh] relative border border-white/10 p-2 fade-in-up">
+                                    <div className="w-full h-full overflow-hidden bg-white/5">
+                                        <img
+                                            src="./Quanzhong Deng 2.JPG"
+                                            alt="Quanzhong Deng Portrait"
+                                            className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity duration-700"
+                                        />
+                                    </div>
+                                    <div className="absolute -top-[1px] -left-[1px] w-4 h-4 border-t border-l border-gold-muted"></div>
+                                    <div className="absolute -bottom-[1px] -right-[1px] w-4 h-4 border-b border-r border-gold-muted"></div>
+                                </div>
+
+                                {/* 2. Text Column (Right) */}
+                                <div className="lg:col-span-7 space-y-8 fade-in-up" style={{animationDelay: '0.2s'}}>
+                                    <div className="flex justify-between items-start">
+                                        <DualText en="Biography" cn="个人简介" />
+                                        <a
+                                            href="./QUANZHONG DENG - CV.pdf"
+                                            target="_blank"
+                                            className="hidden lg:inline-flex items-center gap-2 text-xs font-mono text-gold-muted border border-gold-muted/30 px-6 py-3 hover:bg-gold-muted hover:text-black transition-all uppercase tracking-widest"
+                                        >
+                                            <IconDownload size={14} /> Download CV
+                                        </a>
+                                    </div>
+
+                                    <div className="text-justify space-y-6 max-h-[60vh] overflow-y-auto pr-4 custom-scrollbar">
+                                        <p className="text-gray-300 font-sans font-light leading-relaxed text-sm md:text-base">
+                                            Quanzhong Deng is pursuing an M.M. in Composition at the University of Missouri - Kansas City, where he studies under distinguished composers Chen Yi, Zhou Long, and Paul Rudy. He earned a B.A. from the Sichuan Conservatory of Music. He has received multiple accolades, including Chinese National Scholarships and prizes in both international and Chinese composition competitions. His work has been featured at prestigious events such as the St. Petersburg International New Music Festival, Asian Classical Music Initiative, SPLICE Institute, and Oregon Bach Festival Composers Symposium.
+                                        </p>
+                                        <p className="text-gray-300 font-sans font-light leading-relaxed text-sm md:text-base">
+                                            Deng&apos;s collaborative experience spans film scoring, concert adaptations, and performances with renowned ensembles, including the MolOt Ensemble, Chongqing Philharmonic Orchestra, China-ASEAN Contemporary Ensemble, Del Sol Quartet, Chatter PDX, and Unexpected Progression Ensemble. His compositions reflect a unique blend of traditional and contemporary musical elements.
+                                        </p>
+
+                                        <div className="w-12 h-px bg-white/20"></div>
+
+                                        <p className="text-concrete font-cserif font-light leading-8 text-sm md:text-base">
+                                            现为密苏里大学堪萨斯城校区作曲专业研究生，师从陈怡教授，周龙教授与保罗·鲁迪教授；本科毕业于四川音乐学院作曲系，先后师从肖岗教授与刘鹏副教授，国家奖学金获得者。多次在国内外作曲比赛中获奖，包括阿马德乌斯国际作曲比赛二等奖（一等奖空缺）、第十届塞尔维亚斯梅代雷沃国际作曲比赛二等奖、第十二届中国东盟音乐周暨“花山杯”作曲比赛三等奖、“岭南风格”中国钢琴新作品作曲比赛优秀奖等。
+                                        </p>
+                                        <p className="text-concrete font-cserif font-light leading-8 text-sm md:text-base">
+                                            其作品曾在美国、中国、俄罗斯等地演出，合作团体包括东盟当代乐团、重庆爱乐乐团、MolOt Ensemble、Illusion Duo、Del Sol Quartet等，并与吉他演奏家匡俊宏、女高音歌唱家黄英合作。曾参与 Andre Mark, Dmitri Kourliandski, Januibe Tejera, Michael Pisaro 等国际作曲家的大师班，并为 China Daily Legal 出品的普法动画剧集《小治小宝寻法记》创作全套配乐，该动画获法制网、人民网、腾讯网、澎湃要闻等媒体首页推荐报道。
+                                        </p>
+                                    </div>
+
+                                    {/* Mobile CV Button */}
+                                    <div className="lg:hidden pt-4">
+                                        <a href="./QUANZHONG DENG - CV.pdf" target="_blank" className="inline-flex items-center gap-2 text-xs font-mono text-gold-muted border border-gold-muted/30 px-4 py-2">
+                                            <IconDownload size={14} /> DOWNLOAD CV
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Works Section (FULL SCREEN) */}
+                    <section id="works" className="min-h-screen flex flex-col justify-center py-20 bg-white/5 scroll-mt-0 relative">
+                        <div className="container mx-auto px-6 mb-12">
+                            <div className="flex justify-between items-end">
+                                <DualText en="Selected Works" cn="精选作品" />
+                                <div className="hidden md:block">
+                                    <span className="text-xs text-gray-500 flex items-center gap-2 tracking-widest">
+                                        RECENT COMPOSITIONS
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="w-full">
+                             <WorkItem
+                                year="2025"
+                                titleEn="Breath of the Earth"
+                                titleCn="大地之息"
+                                instrumentationEn="Piano Trio"
+                                instrumentationCn="钢琴三重奏"
+                                duration="5'"
+                                link="https://youtu.be/jeZTm-uUog0"
+                            />
+                            <WorkItem
+                                year="2025"
+                                titleEn="Within the Valley Too"
+                                titleCn="空谷之中 II"
+                                instrumentationEn="Shakuhachi & Electronics"
+                                instrumentationCn="尺八与电子音乐"
+                                duration="11'"
+                                link="https://youtu.be/f8TFFz45dbE"
+                            />
+                            <WorkItem
+                                year="2025"
+                                titleEn="Resonance of Elapsing Moments"
+                                titleCn="逝响"
+                                instrumentationEn="Mixed Quartet (Fl, Vln, Vc, Pno)"
+                                instrumentationCn="混合四重奏"
+                                duration="7'"
+                                link="https://youtu.be/TuckpGOPlXE"
+                            />
+                            <WorkItem
+                                year="2023"
+                                titleEn="Yi Chou Er Dan"
+                                titleCn="一丑二旦"
+                                instrumentationEn="Solo Piano"
+                                instrumentationCn="钢琴独奏"
+                                duration="9'"
+                                link="https://youtu.be/zDj0f3kF8nU"
+                            />
+                            <WorkItem
+                                year="2024"
+                                titleEn="The Third Color Upon the Sea"
+                                titleCn="海面上的第三种颜色"
+                                instrumentationEn="String Quartet"
+                                instrumentationCn="弦乐四重奏"
+                                duration="8'"
+                                link="https://soundcloud.com/rqergcf2jofg/quanzhong-deng-the-third-color?si=85b0f86360784c4ab0cc5ddd9fd4ca19&utm_source=clipboard&utm_medium=text&utm_campaign=social_sharing"
+                            />
+                            <WorkItem
+                                year="2024"
+                                titleEn="Veil of Wavering Bamboo Shadows"
+                                titleCn="竹影婆沙"
+                                instrumentationEn="Sheng & Zheng"
+                                instrumentationCn="笙与古筝"
+                                duration="8'"
+                                link="https://youtu.be/Rh2wqUsLTSQ"
+                            />
+                            <WorkItem
+                                year="2022"
+                                titleEn="Tide in, Tide out"
+                                titleCn="潮起潮落"
+                                instrumentationEn="Chamber Ensemble"
+                                instrumentationCn="室内乐合奏"
+                                duration="10'"
+                                link="https://youtu.be/EQJhBD2fbT4"
+                            />
+                        </div>
+                    </section>
+
+                    {/* Schedule Section (FULL SCREEN) */}
+                    <section id="schedule" className="min-h-screen flex items-center bg-void py-20 scroll-mt-0">
+                        <div className="container mx-auto px-6 w-full">
+                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-16 items-start">
+                                <div className="lg:col-span-1">
+                                    <DualText en="Upcoming Events" cn="近期日程" />
+                                    <p className="mt-8 text-sm text-gray-400 max-w-xs leading-relaxed">
+                                        Appearances in festivals, premieres, and academic lectures.
+                                        <br/><span className="font-cserif text-gray-500 text-xs mt-2 block">音乐节亮相、首演及学术讲座。</span>
+                                    </p>
+                                </div>
+
+                                <div className="lg:col-span-2 grid grid-cols-1 gap-8">
+                                    <div className="bg-white/5 border border-white/10 p-10 hover:border-gold-muted/30 transition-colors flex flex-col md:flex-row justify-between items-start md:items-center gap-6 group">
+                                        <div className="flex flex-col">
+                                            <span className="text-gold-muted font-mono text-xs mb-2 tracking-widest">MAY 09, 2026</span>
+                                            <h4 className="text-2xl font-serif italic text-white group-hover:text-gold-muted transition-colors">Composer-Choreographer Collaboration</h4>
+                                            <span className="text-sm font-cserif text-gray-400 mt-2">UMKC Dance Division · Performance</span>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="block text-sm uppercase tracking-wider text-white">Shawnee, KS</span>
+                                            <span className="block text-xs text-gray-500 mt-1">B&B Theater</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white/5 border border-white/10 p-10 hover:border-gold-muted/30 transition-colors flex flex-col md:flex-row justify-between items-start md:items-center gap-6 group">
+                                        <div className="flex flex-col">
+                                            <span className="text-gold-muted font-mono text-xs mb-2 tracking-widest">JUL 12, 2025</span>
+                                            <h4 className="text-2xl font-serif italic text-white group-hover:text-gold-muted transition-colors">Oregon Bach Festival</h4>
+                                            <span className="text-sm font-cserif text-gray-400 mt-2">Breath of the Earth · Premiere</span>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="block text-sm uppercase tracking-wider text-white">Eugene, OR</span>
+                                            <span className="block text-xs text-gray-500 mt-1">Composers Symposium</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Footer / Contact */}
+                    <footer id="contact" className="py-24 border-t border-white/10 bg-void scroll-mt-0">
+                        <div className="container mx-auto px-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+                                <div>
+                                    <h5 className="font-serif italic text-2xl mb-6">QZ.D</h5>
+                                    <p className="text-gray-500 text-sm font-light">
+                                        © 2025 Quanzhong Deng. <br/>All Rights Reserved.
+                                    </p>
+                                </div>
+
+                                <div>
+                                    <h6 className="text-xs uppercase tracking-widest text-concrete mb-6">Location / 地点</h6>
+                                    <div className="space-y-4">
+                                        <div className="block">
+                                            <span className="block text-white text-sm">Kansas City, MO</span>
+                                            <span className="block text-gray-500 text-xs mt-1">United States</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <h6 className="text-xs uppercase tracking-widest text-concrete mb-6">Contact / 联系</h6>
+                                    <a href="mailto:qd2vt@umkc.edu" className="flex items-center gap-3 text-white hover:text-gold-muted transition-colors mb-4">
+                                        <IconMail size={16} /> <span className="text-sm">qd2vt@umkc.edu</span>
+                                    </a>
+                                </div>
+
+                                <div>
+                                    <h6 className="text-xs uppercase tracking-widest text-concrete mb-6">Materials / 资料</h6>
+                                    <a href="./QUANZHONG DENG - CV.pdf" target="_blank" className="flex items-center gap-3 px-6 py-3 border border-white/20 hover:bg-white hover:text-black transition-all group w-full justify-center">
+                                        <span className="text-xs tracking-widest uppercase">Download CV</span>
+                                        <IconDownload size={14} />
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </footer>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
