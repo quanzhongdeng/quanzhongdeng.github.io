@@ -3,29 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quanzhong Deng | Composer & Sound Artist</title>
-    <meta name="description" content="Official Website of Quanzhong Deng (邓荃中), a composer and multimedia artist based in Kansas City. Explore his orchestral works, electronic soundscapes, and biography.">
-    <meta name="keywords" content="Quanzhong Deng, 邓荃中, Composer, Music Composition, Sound Artist, UMKC, Contemporary Music, Chinese Composer">
-    <meta name="author" content="Quanzhong Deng">
+
     <!-- 防缓存 Meta Tags -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
+
+    <title>Quanzhong Deng | Composer & Sound Artist</title>
+    <meta name="description" content="Official Website of Quanzhong Deng (邓荃中), a composer and multimedia artist based in Kansas City. Explore his orchestral works, electronic soundscapes, and biography.">
+    <meta name="keywords" content="Quanzhong Deng, 邓荃中, Composer, Music Composition, Sound Artist, UMKC, Contemporary Music, Chinese Composer">
+    <meta name="author" content="Quanzhong Deng">
+
     <meta property="og:title" content="Quanzhong Deng | Composer & Sound Artist">
     <meta property="og:description" content="Portfolio of Quanzhong Deng - Sculpting Time & Silence.">
     <meta property="og:url" content="https://quanzhongdeng.com">
     <meta property="og:type" content="website">
     <meta name="google-site-verification" content="l6Ct20tfS-L1RxziBalebaxSUdw-5oQYX-YBj9EloEQ" />
+
+    <!-- 浏览器 Tab 标签页图标 (指向你上传的签名图片) -->
+    <link rel="icon" type="image/png" href="./signature.png">
+
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
     <script src="https://cdn.tailwindcss.com"></script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@200;300;400;600&family=Noto+Serif+SC:wght@300;400;700&display=swap" rel="stylesheet">
+    <!-- 引入了极简高级字体族，包括马善政书法字体 -->
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@200;300;400&family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@200;300;400&display=swap" rel="stylesheet">
 
     <script>
         tailwind.config = {
@@ -41,7 +47,7 @@
                         serif: ['"Cormorant Garamond"', 'serif'],
                         sans: ['"Inter"', 'sans-serif'],
                         cserif: ['"Noto Serif SC"', 'serif'],
-                        kaiti: ['"KaiTi"', '"STKaiti"', '"楷体"', 'serif'],// Chinese Serif
+                        calligraphy: ['"Ma Shan Zheng"', 'cursive'], // 书法字体
                     },
                     letterSpacing: {
                         'widest-xl': '0.25em',
@@ -58,7 +64,6 @@
             overflow-x: hidden;
         }
 
-        /* Custom Scrollbar */
         ::-webkit-scrollbar {
             width: 6px;
         }
@@ -84,18 +89,6 @@
                 transform: translateY(0);
             }
         }
-
-        /* Bilingual Text Utility */
-        .dual-text h2 {
-            font-family: 'Cormorant Garamond', serif;
-        }
-        .dual-text p {
-            font-family: 'Inter', sans-serif;
-        }
-
-        .cn-text {
-            font-family: 'Noto Serif SC', serif;
-        }
     </style>
 </head>
 <body>
@@ -104,7 +97,6 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // --- INLINE ICONS ---
         const IconPlay = ({ size = 24, className = "" }) => (
             <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
                 <polygon points="5 3 19 12 5 21 5 3"></polygon>
@@ -133,7 +125,6 @@
             </svg>
         );
 
-        // Component: Bilingual Text Block (Original Elegant Size)
         const DualText = ({ en, cn, className = "", align = "left", large = false }) => (
             <div className={`flex flex-col ${align === 'center' ? 'items-center text-center' : align === 'right' ? 'items-end text-right' : 'items-start text-left'} ${className}`}>
                 <span className={`block font-serif tracking-wide ${large ? 'text-4xl md:text-6xl lg:text-7xl font-light italic text-white' : 'text-xl md:text-2xl text-white'}`}>
@@ -145,32 +136,44 @@
             </div>
         );
 
-        // Component: Section Separator
-        const Divider = () => (
-            <div className="w-full py-16 flex items-center justify-center opacity-30">
-                <div className="h-[1px] w-24 bg-white"></div>
-            </div>
-        );
-
-        // Component: Work List Item
+        // 精选作品列表（带有年份标签、时长编制，悬停时中英标题统一变金）
         const WorkItem = ({ year, titleEn, titleCn, instrumentationEn, instrumentationCn, duration, link }) => (
-            <a href={link ? link : "#"} target="_blank" className="block group border-t border-white/10 py-6 md:py-8 hover:bg-white/5 transition-all duration-500 cursor-pointer">
-                <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-12 gap-2 md:gap-4 items-baseline">
-                    <div className="md:col-span-1 text-concrete font-mono text-sm">{year}</div>
-                    <div className="md:col-span-5">
+            <a href={link ? link : "#"} target="_blank" className="block group border-t border-white/10 py-8 md:py-10 hover:bg-white/5 transition-all duration-500 cursor-pointer">
+                <div className="container mx-auto px-6 grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-4 items-start md:items-center">
+
+                    {/* 年份 (带有中英双语标签) */}
+                    <div className="md:col-span-2 flex flex-col mb-2 md:mb-0">
+                        <span className="block text-[10px] text-gray-500 tracking-widest uppercase mb-1">Year / 创作年份</span>
+                        <div className="text-gray-300 font-mono text-sm">{year}</div>
+                    </div>
+
+                    {/* 标题 (中英文同色同级，悬停统一变金) */}
+                    <div className="md:col-span-4">
                         <h3 className="text-xl md:text-2xl font-serif italic text-white group-hover:text-gold-muted transition-colors flex items-center gap-2">
                             {titleEn}
                             {link && <IconArrowRight size={16} className="-rotate-45 opacity-0 group-hover:opacity-100 transition-opacity text-gold-muted" />}
                         </h3>
-                        <p className="text-sm text-concrete font-cserif mt-1">{titleCn}</p>
+                        <p className="text-base text-white group-hover:text-gold-muted transition-colors font-cserif mt-1">{titleCn}</p>
                     </div>
-                    <div className="md:col-span-4">
-                        <p className="text-sm text-gray-400 font-sans tracking-wide uppercase">{instrumentationEn}</p>
-                        <p className="text-xs text-concrete font-cserif mt-0.5">{instrumentationCn}</p>
+
+                    {/* 编制 */}
+                    <div className="md:col-span-4 border-l border-white/10 pl-4 md:border-none md:pl-0 mt-4 md:mt-0">
+                        <span className="block text-[10px] text-gray-500 tracking-widest uppercase mb-1">Instrumentation / 编制</span>
+                        <p className="text-sm text-gray-300 font-sans tracking-wide">{instrumentationEn}</p>
+                        <p className="text-xs text-gray-300 font-cserif mt-0.5">{instrumentationCn}</p>
                     </div>
-                    <div className="md:col-span-2 text-right md:text-right font-mono text-xs text-concrete flex items-center justify-end gap-2">
-                        {duration} <IconPlay size={12} className={`opacity-0 group-hover:opacity-100 transition-opacity ${link ? 'text-gold-muted' : ''}`} />
+
+                    {/* 时长 */}
+                    <div className="md:col-span-2 flex flex-col items-start md:items-end font-mono text-xs text-concrete gap-4 border-l border-white/10 pl-4 md:border-none md:pl-0 mt-4 md:mt-0">
+                        <div className="flex flex-col items-start md:items-end w-full">
+                            <span className="block text-[10px] text-gray-500 tracking-widest uppercase mb-1">Duration / 时长</span>
+                            <span className="text-base text-white flex items-center gap-3">
+                                {duration}
+                                <IconPlay size={14} className={`opacity-70 md:opacity-0 group-hover:opacity-100 transition-opacity ${link ? 'text-gold-muted' : ''}`} />
+                            </span>
+                        </div>
                     </div>
+
                 </div>
             </a>
         );
@@ -189,10 +192,11 @@
             return (
                 <div className="bg-void selection:bg-gold-muted selection:text-black">
 
-                    {/* Navigation (Click name to scroll top) */}
+                    {/* Navigation */}
                     <nav className={`fixed w-full z-50 transition-all duration-500 ${scrolled ? 'bg-void/90 backdrop-blur-md py-4 border-b border-white/5' : 'bg-transparent py-8'}`}>
                         <div className="container mx-auto px-6 flex justify-between items-center">
-                            <a href="#" className="font-serif text-2xl tracking-widest text-white hover:text-gold-muted transition-colors cursor-pointer block">
+                            {/* 第一页隐藏 Logo，往下滑动显现 */}
+                            <a href="#" className={`font-serif text-2xl tracking-widest text-white hover:text-gold-muted transition-all duration-500 cursor-pointer block ${scrolled ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 pointer-events-none'}`}>
                                 Quanzhong <span className="text-gold-muted">Deng</span>
                             </a>
                             <div className="hidden md:flex gap-12 text-xs tracking-[0.2em] font-sans text-gray-400 uppercase">
@@ -210,74 +214,91 @@
                         </div>
                     </nav>
 
-                    {/* Hero Section (Reverted to Original Elegant Design) */}
-                    <header id="hero" className="relative min-h-screen flex items-center justify-center pt-20">
-                        {/* Background Element */}
-                        <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 opacity-20 pointer-events-none">
-                            <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-blue-900 rounded-full blur-[120px] mix-blend-screen animate-pulse"></div>
-                            <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-purple-900 rounded-full blur-[100px] mix-blend-screen opacity-50"></div>
+                    {/* --- 极简全屏大图 Hero Section --- */}
+                    <header id="hero" className="relative min-h-screen flex flex-col pt-24 md:pt-32 pb-12 md:pb-20 overflow-hidden">
+
+                        {/* 全屏背景图片 */}
+                        <div className="absolute inset-0 z-0">
+                            <img
+                                src="./Quanzhong Deng.jpg"
+                                alt="Quanzhong Deng Portrait"
+                                className="w-full h-full object-cover object-center scale-105"
+                            />
+
+                            {/* 顶部与底部的基础保护阴影 */}
+                            <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black/50 to-transparent"></div>
+                            <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-void via-black/40 to-transparent"></div>
+
+                            {/* 对角线切割阴影 (已优化：去掉了整体变暗的滤镜，把阴影完全推到了角落，让人像恢复100%高光亮度) */}
+                            <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 30%, transparent 45%)' }}></div>
+                            <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(315deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 30%, transparent 45%)' }}></div>
+
+                            {/* 给中心人像加上一点点极其柔和的径向补光 (提升通透感) */}
+                            <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(circle at 50% 50%, rgba(255,255,255,0.05) 0%, transparent 40%)' }}></div>
                         </div>
 
-                        <div className="container mx-auto px-6 z-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                        {/* 极致简雅的海报文字 */}
+                        <div className="container mx-auto px-6 z-10 relative fade-in-up w-full flex-1 flex flex-col justify-between" style={{animationDelay: '0.2s'}}>
 
-                            {/* Left Side: Text */}
-                            <div className="lg:col-span-6 fade-in-up" style={{animationDelay: '0.1s'}}>
-                                <DualText
-                                    en="Sculpting Time & Silence"
-                                    cn="雕刻时间与静默"
-                                    large={true}
-                                />
-                                <div className="mt-12 max-w-xl">
-                                    {/* *** FONT CHANGED HERE *** 改为 font-serif (衬线体) + italic (斜体) + text-lg (稍大)
-                                        看起来更有艺术感
-                                    */}
-                                    <p className="text-gray-200 font-serif italic text-lg md:text-xl leading-relaxed mb-3 tracking-wide">
-                                        Exploration of acoustic phenomena and algorithmic structures.
-                                        Bridging the gap between traditional orchestration and electronic soundscapes.
-                                    </p>
-                                    <p className="text-concrete font-cserif text-sm leading-relaxed">
-                                        探索传统声学与电子声学的边界。在传统配器法与电子音景之间架起桥梁，构建深邃的听觉空间。
-                                    </p>
-                                </div>
+                            {/* 左上方：英文内容 */}
+                            <div className="text-left self-start mt-0 md:mt-4 md:-ml-4 lg:-ml-8 opacity-90">
+                                {/* 移除了 Deng 的 italic 斜体 */}
+                                <h1 className="text-5xl md:text-6xl lg:text-7xl font-serif font-light text-white tracking-widest mb-6 drop-shadow-md">
+                                    Quanzhong <span className="text-gray-300">Deng</span>
+                                </h1>
 
-                                <div className="mt-12 flex items-center gap-6">
-                                    <a href="#works" className="px-8 py-3 border border-white/20 text-white font-sans text-xs tracking-[0.2em] hover:bg-white hover:text-black transition-all uppercase">
-                                        Listen Now
+                                {/* 提亮并加粗头衔文字 */}
+                                <span className="block font-sans text-[10px] md:text-xs text-white font-bold tracking-[0.4em] uppercase mb-6 drop-shadow-md">
+                                    Composer <span className="mx-2 font-serif opacity-80">&</span> Multimedia Artist
+                                </span>
+
+                                <p className="text-gray-200 font-serif italic text-base md:text-lg leading-relaxed tracking-wide md:whitespace-nowrap drop-shadow-md">
+                                    Sculpting Time & Silence. Exploration of acoustic phenomena and algorithmic structures.
+                                </p>
+
+                                {/* 极简动态交互按钮 (明确的可点击外框 + 播放图标) */}
+                                <div className="mt-10">
+                                    <a href="#works" className="group flex items-center gap-3 px-6 py-3 border border-white/30 text-white hover:bg-white hover:text-black transition-all duration-500 w-fit backdrop-blur-sm bg-black/10">
+                                        <IconPlay size={14} className="group-hover:scale-110 transition-transform" />
+                                        <span className="font-sans text-[10px] md:text-xs tracking-[0.3em] uppercase opacity-90 group-hover:opacity-100 transition-opacity">Listen Now</span>
                                     </a>
                                 </div>
                             </div>
 
-                            {/* Right Side: Photo (Original Framed Style) */}
-                            <div className="lg:col-span-6 flex flex-col justify-center items-end text-right fade-in-up" style={{animationDelay: '0.3s'}}>
-                                <div className="mb-8 relative w-full bg-white/5 border border-white/20 p-2 group transition-transform duration-500 ease-out hover:scale-[1.01] hover:shadow-[0_20px_50px_rgba(255,255,255,0.05)] hover:border-gold-muted/40">
-                                    <div className="w-full overflow-hidden">
-                                        <img
-                                            src="./Quanzhong Deng.jpg"
-                                            alt="Portrait"
-                                            className="w-full h-auto block transition-transform duration-1000 ease-out group-hover:scale-105"
-                                        />
-                                    </div>
-                                    <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t border-l border-gold-muted opacity-50 group-hover:opacity-100 transition-opacity"></div>
-                                    <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b border-r border-gold-muted opacity-50 group-hover:opacity-100 transition-opacity"></div>
-                                </div>
+                            {/* 右下方：中文内容 */}
+                            <div className="text-left md:text-right self-end mt-16 md:mt-0 mb-4 md:mb-8 md:-mr-4 lg:-mr-8 opacity-90 flex flex-col items-start md:items-end">
 
-                                <div className="space-y-1">
-                                    <h1 className="text-4xl font-serif italic text-white">Quanzhong <span className="text-gold-muted">Deng</span></h1>
-                                    <p className="text-2xl font-kaiti text-gray-400">邓荃中</p>
-                                    <div className="h-px w-16 bg-gold-muted ml-auto my-10"></div>
-                                    <p className="text-xl uppercase tracking-widest text-concrete">Composer / Multimedia Artist</p>
-                                    <p className="text-xl text-concrete font-cserif">作曲家 / 多媒体艺术家</p>
+                                {/* 书法体名字 (马善政) */}
+                                <p className="text-6xl md:text-7xl font-calligraphy text-gray-100 tracking-widest mb-6 drop-shadow-md">
+                                    邓 荃 中
+                                </p>
+
+                                {/* 提亮并加粗头衔文字 */}
+                                <span className="block font-cserif text-xs md:text-sm text-white font-bold tracking-[0.4em] mb-6 drop-shadow-md">
+                                    作曲家 <span className="mx-2 opacity-80">|</span> 多媒体艺术家
+                                </span>
+
+                                <p className="text-gray-200 font-cserif font-light text-sm leading-loose md:whitespace-nowrap drop-shadow-md">
+                                    雕刻时间与静默。探索传统声学与电子声学的边界，构建深邃的听觉空间。
+                                </p>
+
+                                {/* 极简动态交互按钮 (明确的可点击外框 + 播放图标，镜像对称设计) */}
+                                <div className="mt-10">
+                                    <a href="#works" className="group flex items-center gap-3 px-6 py-3 border border-white/30 text-white hover:bg-white hover:text-black transition-all duration-500 w-fit backdrop-blur-sm bg-black/10">
+                                        <IconPlay size={14} className="group-hover:scale-110 transition-transform" />
+                                        <span className="font-cserif text-xs md:text-sm tracking-[0.3em] opacity-90 group-hover:opacity-100 transition-opacity">立即收听</span>
+                                    </a>
                                 </div>
                             </div>
+
                         </div>
                     </header>
+                    {/* --- 首页结束 --- */}
 
-                    {/* Biography Section (FULL SCREEN & SPLIT LAYOUT) */}
                     <section id="biography" className="min-h-screen flex items-center bg-void relative py-20 scroll-mt-0">
                         <div className="container mx-auto px-6 h-full">
                             <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center h-full">
 
-                                {/* 1. Image Column (Left) */}
                                 <div className="lg:col-span-5 h-[60vh] lg:h-[75vh] relative border border-white/10 p-2 fade-in-up">
                                     <div className="w-full h-full overflow-hidden bg-white/5">
                                         <img
@@ -290,7 +311,6 @@
                                     <div className="absolute -bottom-[1px] -right-[1px] w-4 h-4 border-b border-r border-gold-muted"></div>
                                 </div>
 
-                                {/* 2. Text Column (Right) */}
                                 <div className="lg:col-span-7 space-y-8 fade-in-up" style={{animationDelay: '0.2s'}}>
                                     <div className="flex justify-between items-start">
                                         <DualText en="Biography" cn="个人简介" />
@@ -321,7 +341,6 @@
                                         </p>
                                     </div>
 
-                                    {/* Mobile CV Button */}
                                     <div className="lg:hidden pt-4">
                                         <a href="./QUANZHONG DENG - CV.pdf" target="_blank" className="inline-flex items-center gap-2 text-xs font-mono text-gold-muted border border-gold-muted/30 px-4 py-2">
                                             <IconDownload size={14} /> DOWNLOAD CV
@@ -332,7 +351,6 @@
                         </div>
                     </section>
 
-                    {/* Works Section (FULL SCREEN) */}
                     <section id="works" className="min-h-screen flex flex-col justify-center py-20 bg-white/5 scroll-mt-0 relative">
                         <div className="container mx-auto px-6 mb-12">
                             <div className="flex justify-between items-end">
@@ -412,7 +430,6 @@
                         </div>
                     </section>
 
-                    {/* Schedule Section (FULL SCREEN) */}
                     <section id="schedule" className="min-h-screen flex items-center bg-void py-20 scroll-mt-0">
                         <div className="container mx-auto px-6 w-full">
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-16 items-start">
@@ -453,7 +470,6 @@
                         </div>
                     </section>
 
-                    {/* Footer / Contact */}
                     <footer id="contact" className="py-24 border-t border-white/10 bg-void scroll-mt-0">
                         <div className="container mx-auto px-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
