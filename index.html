@@ -276,8 +276,10 @@
                     const AudioContext = window.AudioContext || window.webkitAudioContext;
                     audioCtxRef.current = new AudioContext();
                     analyserRef.current = audioCtxRef.current.createAnalyser();
-                    // 加大分辨率以适应全宽度的精细 EQ
-                    analyserRef.current.fftSize = 512; 
+                    // 提升 FFT 分辨率，获得更精准的低频信号分离
+                    analyserRef.current.fftSize = 1024; 
+                    // 增加平滑常数，让波形跳动像真正的专业软件一样丝滑
+                    analyserRef.current.smoothingTimeConstant = 0.85; 
                     
                     sourceRef.current = audioCtxRef.current.createMediaElementSource(audioRef.current);
                     sourceRef.current.connect(analyserRef.current);
@@ -288,7 +290,7 @@
                 }
             };
 
-            // 绘制经典 EQ 频谱动画 (左低频右高频，底部向上长)
+            // 绘制经典专业级 EQ 频谱动画 (对数映射：真正精确的左低中右高)
             const drawWaveform = () => {
                 if (!analyserRef.current || !canvasRef.current) return;
                 
@@ -301,20 +303,31 @@
                 
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 
-                // 忽略极高频空波段，取前 70% 进行满屏绘制
-                const visualLength = Math.floor(bufferLength * 0.7);
-                const barWidth = canvas.width / visualLength;
+                // 将画布划分为固定的柱子数量 (150根，视觉上非常绵密细致)
+                const numBars = 150;
+                const barWidth = canvas.width / numBars;
                 let x = 0;
                 
-                for (let i = 0; i < visualLength; i++) {
-                    const percent = dataArray[i] / 255;
+                // 【核心算法：对数频率映射 (Logarithmic Scale)】
+                // 人耳听觉和乐器基频是指数分布的。我们通过指数算法，把低中频段强制拉宽铺满整个左中区域。
+                const minFreqBin = 1; // 避免 0 的直流干扰
+                const maxFreqBin = Math.floor(bufferLength * 0.4); // 舍弃无意义的极高频超声波段 (大于约 10kHz 的部分)
+                
+                const minLog = Math.log(minFreqBin);
+                const maxLog = Math.log(maxFreqBin);
+                
+                for (let i = 0; i < numBars; i++) {
+                    // 对数映射找回真实的音频频率视觉位置
+                    const expIndex = Math.exp(minLog + (i / numBars) * (maxLog - minLog));
+                    const binIndex = Math.floor(expIndex);
                     
-                    // EQ风格：锚定在底部向上生长，最低保留 2px 基线
+                    const percent = dataArray[binIndex] / 255;
+                    
                     const barHeight = Math.max(percent * canvas.height, 2); 
                     const y = canvas.height - barHeight;
                     
-                    // 随声音动态变换暗金色的透明度
-                    ctx.fillStyle = `rgba(212, 175, 55, ${percent * 0.5 + 0.15})`; 
+                    // 音频能量越强，颜色越偏向亮金
+                    ctx.fillStyle = `rgba(212, 175, 55, ${percent * 0.6 + 0.15})`; 
                     ctx.fillRect(x, y, barWidth - 1, barHeight);
                     x += barWidth;
                 }
