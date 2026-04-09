@@ -271,9 +271,8 @@
                     const AudioContext = window.AudioContext || window.webkitAudioContext;
                     audioCtxRef.current = new AudioContext();
                     analyserRef.current = audioCtxRef.current.createAnalyser();
-                    // 高分辨率以便精准分析频率
-                    analyserRef.current.fftSize = 1024; 
-                    // 增加平滑常数，让波形跳动像真正的专业软件一样丝滑
+                    // 【升级 1】：极高分辨率！4096 能在低中频部分提供 4 倍的原始数据点，彻底打碎块状感
+                    analyserRef.current.fftSize = 4096; 
                     analyserRef.current.smoothingTimeConstant = 0.85; 
                     
                     sourceRef.current = audioCtxRef.current.createMediaElementSource(audioRef.current);
@@ -285,46 +284,53 @@
                 }
             };
 
-            // 绘制终极版波形：精准 EQ 对数映射 (左低右高) + 进度条中轴线的上下倒影镜像！
+            // 绘制终极版波形：高精度 FFT + 线性插值平滑 + 镜像倒影
             const drawWaveform = () => {
                 if (!analyserRef.current || !canvasRef.current) return;
                 
                 const canvas = canvasRef.current;
                 const ctx = canvas.getContext('2d');
-                const bufferLength = analyserRef.current.frequencyBinCount;
+                const bufferLength = analyserRef.current.frequencyBinCount; // 此时为 2048
                 const dataArray = new Uint8Array(bufferLength);
                 
                 analyserRef.current.getByteFrequencyData(dataArray);
                 
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 
-                // 使用 150 根柱子，让波形既绵密又有颗粒感
-                const numBars = 150;
+                // 【升级 2】：柱子数量从 150 提升到 350，画面变得极其细密
+                const numBars = 350;
                 const barWidth = canvas.width / numBars;
                 let x = 0;
                 
-                // 【核心算法1：对数频率映射 Logarithmic Scale】(确保左边是低频 Bass，右边是高频 Treble)
-                const minFreqBin = 1; 
-                const maxFreqBin = Math.floor(bufferLength * 0.4); 
+                // 跳过低频直流噪点，4096 下的 0.25 大约是 11025Hz，刚好覆盖极高频空气音
+                const minFreqBin = 2; 
+                const maxFreqBin = Math.floor(bufferLength * 0.25); 
                 
                 const minLog = Math.log(minFreqBin);
                 const maxLog = Math.log(maxFreqBin);
                 
                 for (let i = 0; i < numBars; i++) {
-                    const expIndex = Math.exp(minLog + (i / numBars) * (maxLog - minLog));
-                    const binIndex = Math.floor(expIndex);
+                    const exactBin = Math.exp(minLog + (i / numBars) * (maxLog - minLog));
                     
-                    const percent = dataArray[binIndex] / 255;
+                    // 【升级 3：核心平滑插值算法】
+                    // 不再粗暴地向下取整，而是根据两个数据点之间的距离，计算出平滑的坡度曲线，消灭阶梯方块
+                    const binLow = Math.floor(exactBin);
+                    const binHigh = Math.min(Math.ceil(exactBin), bufferLength - 1);
+                    const binFraction = exactBin - binLow;
                     
-                    // 【核心算法2：上下镜像倒影 Mirrored Reflection】
-                    // 以画布的垂直正中心为基准（也就是被进度条切过的地方），向上下两边同等延伸
-                    const halfBarHeight = Math.max(percent * (canvas.height / 2), 1); // 最小 1px 保证一条中轴线始终存在
+                    const valLow = dataArray[binLow];
+                    const valHigh = dataArray[binHigh];
+                    const interpolatedValue = valLow + (valHigh - valLow) * binFraction;
+                    
+                    const percent = interpolatedValue / 255;
+                    
+                    const halfBarHeight = Math.max(percent * (canvas.height / 2), 1);
                     const totalBarHeight = halfBarHeight * 2; 
                     const y = (canvas.height / 2) - halfBarHeight; 
                     
-                    // 颜色随着响度微弱渐变
                     ctx.fillStyle = `rgba(212, 175, 55, ${percent * 0.6 + 0.15})`; 
-                    ctx.fillRect(x, y, barWidth - 1, totalBarHeight);
+                    // 间距设为极其微小的 0.5px，让波形紧密连贯又保留了独立线柱的工业感
+                    ctx.fillRect(x, y, barWidth - 0.5, totalBarHeight);
                     x += barWidth;
                 }
                 animationRef.current = requestAnimationFrame(drawWaveform);
