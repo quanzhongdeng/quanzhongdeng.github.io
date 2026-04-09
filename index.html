@@ -165,6 +165,9 @@
         const IconDownload = ({ size = 24, className = "" }) => (
             <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
         );
+        const IconVolume = ({ size = 24, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+        );
 
         const DualText = ({ en, cn, className = "", large = false }) => (
             <div className={`flex flex-col items-start text-left ${className}`}>
@@ -177,8 +180,7 @@
             </div>
         );
 
-        // --- 作品数据源 (支持你上传本地音频文件，已加入演出信息字段) ---
-        // 注意：这里的 audioSrc 路径。你需要把对应的 mp3 文件放在你的网站里。
+        // --- 作品数据源 (支持你上传本地音频文件，已全面双语化！) ---
         const WORKS_DATA = [
             {
                 id: 1, year: "2025", duration: "5:00",
@@ -239,6 +241,14 @@
             const [progress, setProgress] = useState(0);
             const [currentTime, setCurrentTime] = useState("0:00");
             const [duration, setDuration] = useState("0:00");
+            
+            // 音量与波形器状态
+            const [volume, setVolume] = useState(1);
+            const canvasRef = useRef(null);
+            const audioCtxRef = useRef(null);
+            const analyserRef = useRef(null);
+            const sourceRef = useRef(null);
+            const animationRef = useRef(null);
 
             useEffect(() => {
                 const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -254,14 +264,74 @@
                 return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
             };
 
+            // 初始化 Web Audio API (获取实时频谱)
+            const initAudioContext = () => {
+                // 【核心防护】：如果是本地文件协议双击打开，安全策略会阻断音频。我们在这里直接跳过波形绑定，确保音频能放出来。
+                if (window.location.protocol === 'file:') {
+                    console.warn("检测到本地 file:/// 预览。由于浏览器安全限制，波形显示器已暂时关闭，以确保音频能正常发声。当您上传至 GitHub 后，波形将会自动正常显示！");
+                    return; 
+                }
+
+                if (!audioCtxRef.current && audioRef.current) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    audioCtxRef.current = new AudioContext();
+                    analyserRef.current = audioCtxRef.current.createAnalyser();
+                    analyserRef.current.fftSize = 64; // 让柱状图简洁一点
+                    
+                    sourceRef.current = audioCtxRef.current.createMediaElementSource(audioRef.current);
+                    sourceRef.current.connect(analyserRef.current);
+                    analyserRef.current.connect(audioCtxRef.current.destination);
+                }
+                if (audioCtxRef.current?.state === 'suspended') {
+                    audioCtxRef.current.resume();
+                }
+            };
+
+            // 绘制波形动画
+            const drawWaveform = () => {
+                if (!analyserRef.current || !canvasRef.current) return;
+                
+                const canvas = canvasRef.current;
+                const ctx = canvas.getContext('2d');
+                const bufferLength = analyserRef.current.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                
+                analyserRef.current.getByteFrequencyData(dataArray);
+                
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                const barWidth = (canvas.width / bufferLength) * 1.5;
+                let x = 0;
+                
+                for (let i = 0; i < bufferLength; i++) {
+                    const barHeight = (dataArray[i] / 255) * canvas.height;
+                    ctx.fillStyle = `rgba(212, 175, 55, ${dataArray[i] / 255 + 0.1})`; // 随声音跳动的暗金色
+                    ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                    x += barWidth + 1; // 间距
+                }
+                animationRef.current = requestAnimationFrame(drawWaveform);
+            };
+
+            // 控制绘制生命周期
+            useEffect(() => {
+                if (isPlaying) {
+                    animationRef.current = requestAnimationFrame(drawWaveform);
+                } else {
+                    if (animationRef.current) cancelAnimationFrame(animationRef.current);
+                }
+                return () => {
+                    if (animationRef.current) cancelAnimationFrame(animationRef.current);
+                }
+            }, [isPlaying, currentTrack]);
+
             // 播放指定曲目
             const playTrack = (track) => {
+                initAudioContext(); // 确保 AudioContext 在用户点击时激活
                 if (currentTrack?.id === track.id) {
-                    togglePlay(); // 如果点的是正在播放的，就暂停/继续
+                    togglePlay(); 
                 } else {
                     setCurrentTrack(track);
                     setIsPlaying(true);
-                    // state 更新后，useEffect 会自动处理播放
                 }
             };
 
@@ -275,6 +345,7 @@
             }, [currentTrack]);
 
             const togglePlay = () => {
+                initAudioContext();
                 if (audioRef.current) {
                     if (isPlaying) {
                         audioRef.current.pause();
@@ -283,6 +354,12 @@
                     }
                     setIsPlaying(!isPlaying);
                 }
+            };
+
+            const handleVolumeChange = (e) => {
+                const val = parseFloat(e.target.value);
+                setVolume(val);
+                if (audioRef.current) audioRef.current.volume = val;
             };
 
             const onTimeUpdate = () => {
@@ -312,14 +389,14 @@
             return (
                 <div className="bg-void selection:bg-gold-muted selection:text-black relative pb-24">
                     
-                    {/* 全局 Audio 标签 */}
+                    {/* 去掉了引发跨域冲突的 crossOrigin 标签 */}
                     <audio 
                         ref={audioRef} 
                         onTimeUpdate={onTimeUpdate} 
                         onEnded={() => setIsPlaying(false)}
                     />
 
-                    {/* Navigation - 修复：未滚动时增加顶部渐变保护罩，确保文字在亮背景下清晰可见 */}
+                    {/* Navigation - 液态玻璃 */}
                     <nav className={`fixed w-full z-40 transition-all duration-500 ${scrolled ? 'liquid-glass py-4' : 'bg-gradient-to-b from-black/80 via-black/20 to-transparent py-8'}`}>
                         <div className="container mx-auto px-6 flex justify-between items-center drop-shadow-md">
                             <a href="#" className={`font-serif text-2xl tracking-widest text-white hover:text-gold-muted transition-all duration-500 cursor-pointer block ${scrolled ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4 pointer-events-none'}`}>
@@ -331,10 +408,27 @@
                                 <a href="#schedule" className="hover:text-white transition-colors drop-shadow-lg">Schedule / 日程</a>
                                 <a href="#contact" className="hover:text-white transition-colors drop-shadow-lg">Contact / 联络</a>
                             </div>
+                            <div className="md:hidden text-white cursor-pointer p-2" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+                                <div className="space-y-1.5">
+                                    <div className={`w-6 h-px bg-white transition-all duration-300 ${isMenuOpen ? 'rotate-45 translate-y-1.5 bg-gold-muted' : ''}`}></div>
+                                    <div className={`w-6 h-px bg-white transition-all duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}></div>
+                                    <div className={`w-6 h-px bg-white transition-all duration-300 ${isMenuOpen ? '-rotate-45 -translate-y-2 bg-gold-muted' : ''}`}></div>
+                                </div>
+                            </div>
                         </div>
                     </nav>
 
-                    {/* --- Hero Section (全彩不挡脸) --- */}
+                    {/* 移动端菜单 */}
+                    {isMenuOpen && (
+                        <div className="fixed inset-0 z-30 bg-void/98 backdrop-blur-2xl flex flex-col items-center justify-center space-y-8 md:hidden">
+                            <a href="#biography" onClick={() => setIsMenuOpen(false)} className="text-xl tracking-[0.2em] font-sans text-white uppercase hover:text-gold-muted">Bio / 个人简介</a>
+                            <a href="#works" onClick={() => setIsMenuOpen(false)} className="text-xl tracking-[0.2em] font-sans text-white uppercase hover:text-gold-muted">Works / 作品</a>
+                            <a href="#schedule" onClick={() => setIsMenuOpen(false)} className="text-xl tracking-[0.2em] font-sans text-white uppercase hover:text-gold-muted">Schedule / 日程</a>
+                            <a href="#contact" onClick={() => setIsMenuOpen(false)} className="text-xl tracking-[0.2em] font-sans text-white uppercase hover:text-gold-muted">Contact / 联络</a>
+                        </div>
+                    )}
+
+                    {/* --- Hero Section --- */}
                     <header id="hero" className="relative min-h-screen flex flex-col pt-24 md:pt-32 pb-12 md:pb-20 overflow-hidden">
                         <div className="absolute inset-0 z-0">
                             <img src="./Quanzhong Deng.jpg" alt="Quanzhong Deng Portrait" className="w-full h-full object-cover object-center scale-105 opacity-90" />
@@ -370,7 +464,7 @@
                         </div>
                     </header>
 
-                    {/* --- Biography Section (新复杂主义底纹) --- */}
+                    {/* --- Biography Section --- */}
                     <section id="biography" className="min-h-screen flex items-center bg-void bg-complex-score relative py-20 scroll-mt-0 border-t border-white/5">
                         <div className="container mx-auto px-6 h-full">
                             <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center h-full relative z-10">
@@ -382,7 +476,6 @@
                                     <div className="absolute -bottom-[1px] -right-[1px] w-4 h-4 border-b border-r border-gold-muted"></div>
                                 </div>
                                 
-                                {/* 修复：恢复完整一字不落的个人简介内容 */}
                                 <div className="lg:col-span-7 space-y-8 fade-in-up" style={{animationDelay: '0.2s'}}>
                                     <DualText en="Biography" cn="个人简介" />
                                     <div className="text-justify space-y-6 max-h-[60vh] overflow-y-auto pr-4 custom-scrollbar">
@@ -407,7 +500,7 @@
                         </div>
                     </section>
 
-                    {/* --- Works Section (自带内嵌播放的列表) --- */}
+                    {/* --- Works Section --- */}
                     <section id="works" className="min-h-screen flex flex-col justify-center py-20 scroll-mt-0 relative bg-complex-score border-t border-white/5">
                         <div className="container mx-auto px-6 mb-12 relative z-10">
                             <div className="flex justify-between items-end border-b border-white/10 pb-6">
@@ -429,7 +522,6 @@
                                         <div className="md:col-span-4">
                                             <h3 className={`text-xl md:text-2xl font-serif italic flex items-center gap-2 transition-colors ${currentTrack?.id === work.id ? 'text-gold-muted' : 'text-white group-hover:text-gold-muted'}`}>
                                                 {work.titleEn}
-                                                {currentTrack?.id === work.id && isPlaying && <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)] ml-2"></div>}
                                             </h3>
                                             <p className={`text-base font-cserif mt-1 transition-colors ${currentTrack?.id === work.id ? 'text-gold-muted/80' : 'text-gray-400 group-hover:text-gold-muted/80'}`}>{work.titleCn}</p>
                                         </div>
@@ -464,7 +556,6 @@
                                 </div>
 
                                 <div className="lg:col-span-2 grid grid-cols-1 gap-8">
-                                    {/* Event 1 */}
                                     <div className="bg-white/5 border border-white/10 p-10 hover:border-gold-muted/30 transition-colors flex flex-col md:flex-row justify-between items-start md:items-center gap-6 group">
                                         <div className="flex flex-col">
                                             <span className="text-gold-muted font-mono text-xs mb-2 tracking-widest">MAY 09, 2026 <span className="mx-2 opacity-50">|</span> 2026年5月9日</span>
@@ -478,7 +569,6 @@
                                         </div>
                                     </div>
 
-                                    {/* Event 2 */}
                                     <div className="bg-white/5 border border-white/10 p-10 hover:border-gold-muted/30 transition-colors flex flex-col md:flex-row justify-between items-start md:items-center gap-6 group">
                                         <div className="flex flex-col">
                                             <span className="text-gold-muted font-mono text-xs mb-2 tracking-widest">JUL 12, 2025 <span className="mx-2 opacity-50">|</span> 2025年7月12日</span>
@@ -496,7 +586,7 @@
                         </div>
                     </section>
 
-                    {/* --- Footer Section (包含完整中英双语的联系方式区) --- */}
+                    {/* --- Footer Section --- */}
                     <footer id="contact" className="py-24 border-t border-white/10 bg-void relative z-10 pb-36">
                         <div className="container mx-auto px-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
@@ -533,22 +623,24 @@
                         </div>
                     </footer>
 
-                    {/* --- 全新：底部全局吸底音频播放器 (Global Sticky Player) --- */}
+                    {/* --- 全局吸底音频播放器 --- */}
                     {currentTrack && (
                         <div className="fixed bottom-0 left-0 w-full z-50 liquid-glass border-t border-gold-muted/20 player-slide-up">
                             <div className="container mx-auto px-4 md:px-6 py-4 flex flex-col md:flex-row items-center gap-4 md:gap-8">
                                 
-                                {/* 歌曲与演出信息区 */}
                                 <div className="flex w-full md:w-auto items-center justify-between md:justify-start gap-4 md:border-r border-white/10 md:pr-8">
                                     <div className="flex flex-col">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>
-                                            <span className="font-serif italic text-white text-lg md:text-xl truncate max-w-[200px] md:max-w-xs">{currentTrack.titleEn}</span>
+                                        <div className="flex items-center gap-3">
+                                            {/* 波形画布 */}
+                                            <div className="w-8 h-4 flex items-center justify-center">
+                                                <canvas ref={canvasRef} width="32" height="16" className={`transition-opacity duration-300 ${isPlaying ? 'opacity-100' : 'opacity-0'}`} />
+                                                {!isPlaying && <div className="absolute w-1.5 h-1.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]"></div>}
+                                            </div>
+                                            <span className="font-serif italic text-white text-lg md:text-xl truncate max-w-[180px] md:max-w-xs">{currentTrack.titleEn}</span>
                                         </div>
-                                        <span className="font-cserif text-xs text-gold-muted opacity-80 mt-1">{currentTrack.titleCn}</span>
+                                        <span className="font-cserif text-xs text-gold-muted opacity-80 mt-1 pl-11">{currentTrack.titleCn}</span>
                                         
-                                        {/* 新增：演奏家、时间、地点 */}
-                                        <div className="flex flex-col mt-3 gap-1">
+                                        <div className="flex flex-col mt-3 gap-1 pl-11">
                                             <span className="text-[10px] text-gray-400 font-mono tracking-widest flex items-center gap-2">
                                                 <span className="text-gray-500 uppercase w-20">Perf / 演奏:</span> 
                                                 <span className="font-cserif text-gray-300">{currentTrack.performer}</span>
@@ -563,11 +655,9 @@
                                             </span>
                                         </div>
                                     </div>
-                                    {/* 手机端隐藏的关闭按钮 */}
                                     <button onClick={closePlayer} className="md:hidden text-gray-500 hover:text-white p-2 self-start"><IconClose size={20} /></button>
                                 </div>
 
-                                {/* 控制区与进度条 */}
                                 <div className="flex-1 w-full flex items-center gap-4 md:gap-6 py-2">
                                     <button onClick={togglePlay} className="w-10 h-10 shrink-0 rounded-full bg-white text-black flex items-center justify-center hover:bg-gold-muted hover:scale-105 transition-all">
                                         {isPlaying ? <IconPause size={18} /> : <IconPlay size={18} className="ml-1" />}
@@ -582,10 +672,19 @@
                                         />
                                         <span>{duration}</span>
                                     </div>
+
+                                    {/* 音量控制 */}
+                                    <div className="hidden md:flex items-center gap-2 w-24 border-l border-white/10 pl-6">
+                                        <IconVolume size={14} className="text-gray-400" />
+                                        <input 
+                                            type="range" min="0" max="1" step="0.01" value={volume} onChange={handleVolumeChange}
+                                            className="flex-1"
+                                            style={{ background: `linear-gradient(to right, #D4AF37 ${volume * 100}%, rgba(255,255,255,0.1) ${volume * 100}%)` }}
+                                        />
+                                    </div>
                                 </div>
 
-                                {/* 桌面端关闭按钮 */}
-                                <button onClick={closePlayer} className="hidden md:block text-gray-500 hover:text-white hover:rotate-90 transition-all self-center ml-auto">
+                                <button onClick={closePlayer} className="hidden md:block text-gray-500 hover:text-white hover:rotate-90 transition-all self-center ml-4">
                                     <IconClose size={24} />
                                 </button>
                             </div>
