@@ -52,6 +52,17 @@
 @media(max-width:360px){.wrap{width:calc(100% - 32px)}.brand-name{font-size:7px;letter-spacing:.08em}.brand{gap:7px}.sound-controls{margin-left:auto}.sound-toggle{min-width:34px;padding:7px}.sound-settings summary{min-width:24px}.hero-copy h1,.hero-copy h2{font-size:42px;max-width:290px}.hero-copy>.eyebrow{font-size:7px;letter-spacing:.17em}.identity-name{font-size:18px}.identity-name .cn{font-size:11px;margin-left:5px}.identity-role{max-width:165px;font-size:6px}.stage-controls{gap:3px}.scene-dots button{width:23px}.scene-dots button::after{left:3px;width:16px}#motion-toggle{width:36px;height:36px}.work-title{font-size:23px}}
 @media(max-width:900px) and (max-height:740px){.stage-topline{top:91px}.hero-copy{top:116px}.hero-copy h1,.hero-copy h2{font-size:42px;margin:10px 0 13px}.hero-copy p{font-size:10px;line-height:1.5}.hero-copy .hero-cn{font-size:10px;margin-top:6px}.hero-cta{margin-top:7px}.hero-cta .text-link{min-height:32px;font-size:8px}.hero-sound-button{margin-top:8px;min-height:48px;padding:8px 12px}.hero-sound-caption{font-size:9px}.hero-sound-button strong{font-size:9px}.shape-label{bottom:16%}.stage-bottom{bottom:16px}}
 @media(min-width:701px) and (max-width:900px){.wrap{width:calc(100% - 80px)}.hero-copy h1,.hero-copy h2{max-width:600px;font-size:64px}.hero-copy{top:16%}.hero-copy p{font-size:13px}.hero-copy .hero-cn{font-size:13px}.stage-topline{top:114px}.identity-role{font-size:8px;max-width:310px}.identity-name{font-size:28px}.content-section{padding:90px 0}.bio-text p{font-size:15px}.work-title{font-size:34px}}
+/* 默认显示彩色 */
+.portrait img {
+    filter: none;
+    transition: transform 0.7s ease, filter 0.7s ease;
+}
+
+/* 鼠标悬停时轻微放大、提亮 */
+.portrait:hover img {
+    filter: brightness(1.06);
+    transform: scale(1.025);
+}
 </style>
 </head>
 <body>
