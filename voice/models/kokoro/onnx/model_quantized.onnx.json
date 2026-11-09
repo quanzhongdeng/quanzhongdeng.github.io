@@ -1,0 +1,67 @@
+{
+  "bytes": 92361116,
+  "sha256": "fbae9257e1e05ffc727e951ef9b9c98418e6d79f1c9b6b13bd59f5c9028a1478",
+  "chunks": [
+    {
+      "file": "model_quantized.onnx.part000",
+      "bytes": 8388608,
+      "sha256": "775f6c6232f60c7d778257bf514d98443b44c415b78ee02a95ed86ea13e554ab"
+    },
+    {
+      "file": "model_quantized.onnx.part001",
+      "bytes": 8388608,
+      "sha256": "b0bac0a439e3e5e6e6f6f75906bfc091b8384d9abf31fc363269c435dcd0d575"
+    },
+    {
+      "file": "model_quantized.onnx.part002",
+      "bytes": 8388608,
+      "sha256": "510f8d291ca95b96ef6f011f2ccf9abecc8cf605cb47758e190ad726687814e5"
+    },
+    {
+      "file": "model_quantized.onnx.part003",
+      "bytes": 8388608,
+      "sha256": "5578b35c2b04820d1bbb8b349c5e171a6e76a0f2c18dba7c4f318d495fe09869"
+    },
+    {
+      "file": "model_quantized.onnx.part004",
+      "bytes": 8388608,
+      "sha256": "2f1d6afc266a79dfcc5d4624f829a8b6e13579e5ad24bcfc6dea353b421db652"
+    },
+    {
+      "file": "model_quantized.onnx.part005",
+      "bytes": 8388608,
+      "sha256": "aad6a8b64b2fd22cd8419faf687039954e87804183c94483f66aaaa377c08d2e"
+    },
+    {
+      "file": "model_quantized.onnx.part006",
+      "bytes": 8388608,
+      "sha256": "337e25537a81e219422d77877dfe3c8db1890ccb202f2f2a8440246fa66fcd34"
+    },
+    {
+      "file": "model_quantized.onnx.part007",
+      "bytes": 8388608,
+      "sha256": "fe9b85346c075ad9079792ceea78e75c3e8ab0c18c9b8e2819cbe5eae50062ca"
+    },
+    {
+      "file": "model_quantized.onnx.part008",
+      "bytes": 8388608,
+      "sha256": "396afdaccfd39d5bd3010e734b9b56a08944b63011aaff5c962d4770cd223ba1"
+    },
+    {
+      "file": "model_quantized.onnx.part009",
+      "bytes": 8388608,
+      "sha256": "39e9cdf3047fe17998f41e689e472d669fecbc991479033e8097cd3d39c5cb3b"
+    },
+    {
+      "file": "model_quantized.onnx.part010",
+      "bytes": 8388608,
+      "sha256": "e1ce1f6fa654f0caa79689045aacaba96f884c6fb22d3f76fe5efe6172ff9f32"
+    },
+    {
+      "file": "model_quantized.onnx.part011",
+      "bytes": 86428,
+      "sha256": "297550dda346caa94ce625ddc4272c0b4daef78f3ab497a7a3728574755dda55"
+    }
+  ],
+  "revision": "1939ad2a8e416c0acfeecc08a694d14ef25f2231"
+}

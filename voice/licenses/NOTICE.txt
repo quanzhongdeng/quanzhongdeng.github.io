@@ -1,0 +1,20 @@
+VOXA standalone text-to-speech
+
+Kokoro model and Kokoro.js: Apache License 2.0
+https://github.com/hexgrad/kokoro
+https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX
+Model revision: 1939ad2a8e416c0acfeecc08a694d14ef25f2231
+The browser voice asset loader is modified to load from this website.
+
+Transformers.js: Apache License 2.0
+https://github.com/huggingface/transformers.js
+
+ONNX Runtime: MIT License
+https://github.com/microsoft/onnxruntime
+
+Phonemizer.js: Apache License 2.0; embedded eSpeak NG: GPL-3.0-or-later
+Source and corresponding build sources: https://github.com/xenova/phonemizer.js
+eSpeak NG source: https://github.com/espeak-ng/espeak-ng
+
+React / ReactDOM / Lucide: MIT (see accompanying license files).
+Dependency notices are also preserved in the JavaScript bundles.
