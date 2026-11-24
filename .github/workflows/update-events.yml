@@ -64,7 +64,6 @@ jobs:
               return ''.join(parts)
           events = [(r, parse_date(get(r, 'date'))) for r in rows if get(r, 'date') and get(r, 'title_en') and get(r, 'published').lower() != 'false']
           if not events: raise ValueError('No valid published events')
-          events.sort(key=lambda item: item[1], reverse=True)
           path = Path('index.html')
           source = path.read_text(encoding='utf-8')
           pattern = r'(<section id="schedule"[^>]*>.*?<div class="events-grid">).*?(</div></div></section>)'
