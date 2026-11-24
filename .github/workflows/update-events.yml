@@ -2,7 +2,7 @@ name: Update Events and deploy website
 on:
   push:
     branches: [main]
-   schedule:
+  schedule:
     - cron: '3,13,23,33,43,53 * * * *'
   workflow_dispatch:
 permissions:
