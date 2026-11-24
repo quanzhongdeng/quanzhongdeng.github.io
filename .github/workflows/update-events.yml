@@ -1,0 +1,88 @@
+name: Update Events and deploy website
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '7,22,37,52 * * * *'
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - name: Generate Events from Google Sheets
+        run: |
+          python3 - <<'PY'
+          import json, re, urllib.request
+          from datetime import datetime
+          from html import escape
+          from pathlib import Path
+          from urllib.parse import urlsplit
+          url = 'https://script.google.com/macros/s/AKfycbxVgiQpSkB-EXBNrUH6ozf3P8sFHPejuL-YWdhnUZFiXWoh0ps6afjR_OwRFp1IVKxyEg/exec'
+          with urllib.request.urlopen(url, timeout=40) as response:
+              rows = json.load(response)
+          if not isinstance(rows, list) or not rows:
+              raise ValueError('No published events. Existing live website left unchanged.')
+          def get(row, key):
+              return str(row.get(key) or '').strip()
+          def parse_date(value):
+              for fmt in ('%Y-%m-%d', '%m/%d/%Y', '%Y/%m/%d', '%m/%d/%y'):
+                  try:
+                      return datetime.strptime(value, fmt).date()
+                  except ValueError:
+                      pass
+              raise ValueError('Invalid date: ' + value)
+          def render(row, date):
+              def e(key): return escape(get(row, key))
+              date_text = f'{date:%b %d, %Y}'.upper() + f' / {date.year}年{date.month}月{date.day}日'
+              title = e('title_en')
+              link = get(row, 'url')
+              if urlsplit(link).scheme in ('http', 'https') and urlsplit(link).netloc:
+                  title = f'<a href="{escape(link, quote=True)}" target="_blank" rel="noopener noreferrer">{title}</a>'
+              parts = [f'<article class="event reveal"><p class="event-date">{date_text}</p><h3>{title}</h3>']
+              if e('title_zh'): parts.append(f'<p class="cn" lang="zh-CN">{e("title_zh")}</p>')
+              left = []
+              if e('work'): left.append(f'<b>{e("work")}</b>')
+              if e('work_zh'): left.append(f'<span class="cn" lang="zh-CN">{e("work_zh")}</span>')
+              if e('performers'): left.append(e('performers'))
+              location = ', '.join(filter(None, [e('city'), e('country')]))
+              right = list(filter(None, [location, e('venue'), e('time')]))
+              if left or right:
+                  parts.append('<div class="event-meta">')
+                  if left: parts.append('<p>' + '<br>'.join(left) + '</p>')
+                  if right: parts.append('<p>' + '<br>'.join(right) + '</p>')
+                  parts.append('</div>')
+              parts.append('</article>')
+              return ''.join(parts)
+          events = [(r, parse_date(get(r, 'date'))) for r in rows if get(r, 'date') and get(r, 'title_en') and get(r, 'published').lower() != 'false']
+          if not events: raise ValueError('No valid published events')
+          events.sort(key=lambda item: item[1], reverse=True)
+          path = Path('index.html')
+          source = path.read_text(encoding='utf-8')
+          pattern = r'(<section id="schedule"[^>]*>.*?<div class="events-grid">).*?(</div></div></section>)'
+          html, count = re.subn(pattern, lambda m: m[1] + ''.join(render(r,d) for r,d in events) + m[2], source, count=1, flags=re.S)
+          if count != 1: raise ValueError('Original Events section not found')
+          path.write_text(html, encoding='utf-8')
+          print(f'Rendered {len(events)} events')
+          PY
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
